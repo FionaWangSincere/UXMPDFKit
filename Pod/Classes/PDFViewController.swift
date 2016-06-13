@@ -23,7 +23,7 @@ public class PDFViewController: UIViewController {
     
     lazy var pageScrubber:PDFPageScrubber = {
         
-        var pageScrubber = PDFPageScrubber(frame: CGRectMake(0, self.view.frame.size.height - self.bottomLayoutGuide.length, self.view.frame.size.width, 44.0), document: self.document)
+        var pageScrubber = PDFPageScrubber(frame: CGRect(x: 0, y: self.view.frame.size.height - self.bottomLayoutGuide.length, width: self.view.frame.size.width, height: 44.0), document: self.document)
         pageScrubber.scrubberDelegate = self
         pageScrubber.translatesAutoresizingMaskIntoConstraints = false
         return pageScrubber
@@ -52,14 +52,14 @@ public class PDFViewController: UIViewController {
         self.view.addSubview(collectionView)
         self.view.addSubview(pageScrubber)
         
-        var constraints = NSLayoutConstraint.constraintsWithVisualFormat("H:|[collectionView]|", options: .AlignAllBaseline, metrics: nil, views: [ "superview": self.view, "collectionView": self.collectionView])
-        constraints.appendContentsOf(NSLayoutConstraint.constraintsWithVisualFormat("V:|[collectionView]|", options: .AlignAllLeft, metrics: nil, views: [ "superview": self.view, "collectionView": self.collectionView]))
-        constraints.appendContentsOf(NSLayoutConstraint.constraintsWithVisualFormat("H:|[scrubber]|", options: .AlignAllBaseline, metrics: nil, views: [ "superview": self.view, "scrubber": self.pageScrubber]))
-        constraints.appendContentsOf(NSLayoutConstraint.constraintsWithVisualFormat("V:[scrubber(44)]-0-[bottomLayout]", options: .AlignAllLeft, metrics: nil, views: [ "scrubber": self.pageScrubber, "bottomLayout": self.bottomLayoutGuide ]))
+        var constraints = NSLayoutConstraint.constraints(withVisualFormat: "H:|[collectionView]|", options: .alignAllLastBaseline, metrics: nil, views: [ "superview": self.view, "collectionView": self.collectionView])
+        constraints.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "V:|[collectionView]|", options: .alignAllLeft, metrics: nil, views: [ "superview": self.view, "collectionView": self.collectionView]))
+        constraints.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "H:|[scrubber]|", options: .alignAllLastBaseline, metrics: nil, views: [ "superview": self.view, "scrubber": self.pageScrubber]))
+        constraints.append(contentsOf: NSLayoutConstraint.constraints(withVisualFormat: "V:[scrubber(44)]-0-[bottomLayout]", options: .alignAllLeft, metrics: nil, views: [ "scrubber": self.pageScrubber, "bottomLayout": self.bottomLayoutGuide ]))
         
         self.view.addConstraints(constraints)
         
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Action, target: self, action: #selector(PDFViewController.saveForm))
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(PDFViewController.saveForm))
         
         self.pageScrubber.sizeToFit()
         
@@ -70,7 +70,7 @@ public class PDFViewController: UIViewController {
         }
     }
     
-    func loadDocument(document: PDFDocument) {
+    func loadDocument(_ document: PDFDocument) {
         self.collectionView = PDFSinglePageViewer(frame: self.view.bounds, document: self.document)
         self.collectionView.translatesAutoresizingMaskIntoConstraints = false
     }
@@ -84,11 +84,11 @@ public class PDFViewController: UIViewController {
         self.view.layoutSubviews()
     }
     
-    public override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+    public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         
-        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
+        super.viewWillTransition(to: size, with: coordinator)
         
-        coordinator.animateAlongsideTransition({ (context) in
+        coordinator.animate(alongsideTransition: { (context) in
             
             self.collectionView.contentInset = UIEdgeInsetsMake(self.topLayoutGuide.length, 0, self.bottomLayoutGuide.length, 0)
             self.collectionView.collectionViewLayout.invalidateLayout()
@@ -99,37 +99,37 @@ public class PDFViewController: UIViewController {
         })
     }
     
-    func handleTap(gestureRecognizer: UIGestureRecognizer) {
+    func handleTap(_ gestureRecognizer: UIGestureRecognizer) {
         
-        if let nvc = self.navigationController where nvc.navigationBarHidden {
+        if let nvc = self.navigationController where nvc.isNavigationBarHidden {
             self.navigationController?.setNavigationBarHidden(false, animated: true)
-            self.pageScrubber.hidden = false
+            self.pageScrubber.isHidden = false
         }
         else {
             self.navigationController?.setNavigationBarHidden(true, animated: true)
-            self.pageScrubber.hidden = true
+            self.pageScrubber.isHidden = true
         }
         self.collectionView.collectionViewLayout.invalidateLayout()
     }
     
     func saveForm() {
         
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+        DispatchQueue.global(attributes: DispatchQueue.GlobalAttributes.qosDefault).async {
             
             let pdf = self.formController.renderFormOntoPDF()
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async {
                 
                 let items = [pdf]
                 let activityVC = UIActivityViewController(activityItems: items, applicationActivities: nil)
                 
-                if UIDevice.currentDevice().userInterfaceIdiom == .Pad {
-                    activityVC.modalPresentationStyle = .Popover
+                if UIDevice.current().userInterfaceIdiom == .pad {
+                    activityVC.modalPresentationStyle = .popover
                     let popController = activityVC.popoverPresentationController
                     popController?.sourceView = self.view
-                    popController?.sourceRect = CGRectMake(self.view.frame.width - 34, 64, 0, 0)
-                    popController?.permittedArrowDirections = .Up
+                    popController?.sourceRect = CGRect(x: self.view.frame.width - 34, y: 64, width: 0, height: 0)
+                    popController?.permittedArrowDirections = .up
                 }
-                self.presentViewController(activityVC, animated: true, completion: nil)
+                self.present(activityVC, animated: true, completion: nil)
             }
         }
     }
@@ -138,7 +138,7 @@ public class PDFViewController: UIViewController {
 
 extension PDFViewController: PDFPageScrubberDelegate {
     
-    public func scrubber(scrubber: PDFPageScrubber, selectedPage: Int) {
+    public func scrubber(_ scrubber: PDFPageScrubber, selectedPage: Int) {
         
         self.document.currentPage = selectedPage
         self.collectionView.displayPage(selectedPage, animated: false)
@@ -147,13 +147,13 @@ extension PDFViewController: PDFPageScrubberDelegate {
 
 extension PDFViewController: PDFSinglePageViewerDelegate {
     
-    public func singlePageViewer(collectionView: PDFSinglePageViewer, didDisplayPage page: Int) {
+    public func singlePageViewer(_ collectionView: PDFSinglePageViewer, didDisplayPage page: Int) {
         
         self.document.currentPage = page
         self.pageScrubber.updateScrubber()
     }
     
-    public func singlePageViewer(collectionView: PDFSinglePageViewer, loadedContent content: PDFPageContentView) {
+    public func singlePageViewer(_ collectionView: PDFSinglePageViewer, loadedContent content: PDFPageContentView) {
         
         self.formController.showForm(content)
     }

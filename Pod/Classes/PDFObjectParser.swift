@@ -36,9 +36,9 @@ public class PDFObjectParser: NSObject {
             return nil
         }
         
-        let catalogue = CGPDFDocumentGetCatalog(ref)
+        let catalogue = ref.catalog
 
-        self.attributes = PDFDictionary(dictionaryRef: catalogue)
+        self.attributes = PDFDictionary(dictionaryRef: catalogue!)
 
         return self.attributes
     }
@@ -48,7 +48,7 @@ public class PDFObjectParser: NSObject {
         guard let ref = self.document.documentRef else {
             return nil
         }
-        return CGPDFDocumentGetCatalog(ref)
+        return ref.catalog
     }
     
 }

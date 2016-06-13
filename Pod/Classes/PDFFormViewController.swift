@@ -29,7 +29,7 @@ public class PDFFormViewController:NSObject {
     
     func setupUI() {
         
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+        DispatchQueue.global(attributes: DispatchQueue.GlobalAttributes.qosDefault).async {
             
             guard let attributes = self.parser.attributes else {
                 return
@@ -50,14 +50,14 @@ public class PDFFormViewController:NSObject {
             }
 
             if let lastPage = self.lastPage {
-                dispatch_async(dispatch_get_main_queue()) {
+                DispatchQueue.main.async {
                     self.showForm(lastPage)
                 }
             }
         }
     }
     
-    func enumerate(fieldDict:PDFDictionary) {
+    func enumerate(_ fieldDict:PDFDictionary) {
         
         if fieldDict["Subtype"] != nil {
             self.createFormField(fieldDict)
@@ -81,7 +81,7 @@ public class PDFFormViewController:NSObject {
         }
     }
     
-    func getPageNumber(field:PDFDictionary) -> Int? {
+    func getPageNumber(_ field:PDFDictionary) -> Int? {
         
         guard let attributes = self.parser.attributes else {
             return nil
@@ -110,11 +110,11 @@ public class PDFFormViewController:NSObject {
         return page
     }
     
-    func createFormField(dict: PDFDictionary) {
+    func createFormField(_ dict: PDFDictionary) {
         
         if let page = self.getPageNumber(dict) {
 
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async {
 
                 if let formView = self.formPage(page) {
                     formView.createFormField(dict)
@@ -129,7 +129,7 @@ public class PDFFormViewController:NSObject {
         }
     }
     
-    func showForm(contentView:PDFPageContentView) {
+    func showForm(_ contentView:PDFPageContentView) {
         
         self.lastPage = contentView
         let page = contentView.page
@@ -138,7 +138,7 @@ public class PDFFormViewController:NSObject {
         }
     }
     
-    func formPage(page: Int) -> PDFFormPage? {
+    func formPage(_ page: Int) -> PDFFormPage? {
         
         if page > self.formPages.count {
             return nil
@@ -147,25 +147,25 @@ public class PDFFormViewController:NSObject {
     }
     
     
-    public func renderFormOntoPDF() -> NSURL {
+    public func renderFormOntoPDF() -> URL {
         let documentRef = document.documentRef
         let pages = document.pageCount
         let title = document.fileUrl.lastPathComponent ?? "annotated.pdf"
-        let tempPath = NSTemporaryDirectory().stringByAppendingString(title)
+        let tempPath = NSTemporaryDirectory() + title
         
-        UIGraphicsBeginPDFContextToFile(tempPath, CGRectZero, nil)
+        UIGraphicsBeginPDFContextToFile(tempPath, CGRect.zero, nil)
         for i in 1...pages {
-            let page = CGPDFDocumentGetPage(documentRef, i)
+            let page = documentRef?.page(at: i)
             let bounds = self.document.boundsForPDFPage(i)
             
             if let context = UIGraphicsGetCurrentContext() {
                 UIGraphicsBeginPDFPageWithInfo(bounds, nil)
-                CGContextTranslateCTM(context, 0, bounds.size.height)
-                CGContextScaleCTM(context, 1.0, -1.0)
-                CGContextDrawPDFPage (context, page)
+                context.translate(x: 0, y: bounds.size.height)
+                context.scale(x: 1.0, y: -1.0)
+                context.drawPDFPage (page!)
                 
-                CGContextScaleCTM(context, 1.0, -1.0)
-                CGContextTranslateCTM(context, 0, -bounds.size.height)
+                context.scale(x: 1.0, y: -1.0)
+                context.translate(x: 0, y: -bounds.size.height)
                 
                 if let form = formPage(i) {
                     form.renderInContext(context, size: bounds)
@@ -173,16 +173,15 @@ public class PDFFormViewController:NSObject {
             }
         }
         UIGraphicsEndPDFContext()
-        
-        return NSURL.fileURLWithPath(tempPath)
+        return URL(fileURLWithPath: tempPath)
     }
     
-    public func save(url: NSURL) -> Bool {
+    public func save(_ url: URL) -> Bool {
         
         let tempUrl = renderFormOntoPDF()
-        let fileManger = NSFileManager.defaultManager()
+        let fileManger = FileManager.default()
         do {
-            try fileManger.copyItemAtURL(tempUrl, toURL: url)
+            try fileManger.copyItem(at: tempUrl, to: url)
         }
         catch _ { return false }
         return true

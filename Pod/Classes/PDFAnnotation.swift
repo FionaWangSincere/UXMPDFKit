@@ -10,34 +10,34 @@ import UIKit
 
 protocol PDFAnnotation {
     
-    func drawInContext(context: CGContextRef)
+    func drawInContext(_ context: CGContext)
 }
 
 struct PDFTextAnnotation:PDFAnnotation {
     
     var text:String = ""
-    var rect:CGRect = CGRectMake(0, 0, 0, 0)
-    var font:UIFont = UIFont.systemFontOfSize(14.0)
+    var rect:CGRect = CGRect(x: 0, y: 0, width: 0, height: 0)
+    var font:UIFont = UIFont.systemFont(ofSize: 14.0)
     
-    func drawInContext(context: CGContextRef) {
+    func drawInContext(_ context: CGContext) {
         
         UIGraphicsPushContext(context)
-        CGContextSetAlpha(context, 1.0)
+        context.setAlpha(1.0)
         
         let nsText = self.text as NSString
-        let paragraphStyle:NSMutableParagraphStyle = NSParagraphStyle.defaultParagraphStyle().mutableCopy() as! NSMutableParagraphStyle
-        paragraphStyle.alignment = NSTextAlignment.Left
+        let paragraphStyle:NSMutableParagraphStyle = NSParagraphStyle.default().mutableCopy() as! NSMutableParagraphStyle
+        paragraphStyle.alignment = NSTextAlignment.left
         
         let attributes:[String:AnyObject] = [
             NSFontAttributeName: font,
-            NSForegroundColorAttributeName: UIColor.blackColor(),
+            NSForegroundColorAttributeName: UIColor.black(),
             NSParagraphStyleAttributeName: paragraphStyle
         ]
         
-        let size:CGSize = nsText.sizeWithAttributes(attributes)
-        let textRect = CGRectMake(self.rect.origin.x, self.rect.origin.y, size.width, size.height)
+        let size:CGSize = nsText.size(attributes: attributes)
+        let textRect = CGRect(x: self.rect.origin.x, y: self.rect.origin.y, width: size.width, height: size.height)
         
-        nsText.drawInRect(textRect, withAttributes: attributes)
+        nsText.draw(in: textRect, withAttributes: attributes)
         
         UIGraphicsPopContext()
     }
@@ -45,25 +45,25 @@ struct PDFTextAnnotation:PDFAnnotation {
 
 struct PDFPathAnnotation:PDFAnnotation {
     
-    var path:CGPathRef
-    var color:CGColorRef
+    var path:CGPath
+    var color:CGColor
     var alpha:CGFloat
     var fill:Bool
     var lineWidth: CGFloat
     
-    func drawInContext(context: CGContextRef) {
+    func drawInContext(_ context: CGContext) {
         
-        CGContextAddPath(context, self.path)
-        CGContextSetLineWidth(context, self.lineWidth)
-        CGContextSetAlpha(context, self.alpha)
+        context.addPath(self.path)
+        context.setLineWidth(self.lineWidth)
+        context.setAlpha(self.alpha)
         
         if self.fill {
-            CGContextSetFillColorWithColor(context, self.color)
-            CGContextFillPath(context);
+            context.setFillColor(self.color)
+            context.fillPath();
         }
         else {
-            CGContextSetStrokeColorWithColor(context, self.color)
-            CGContextStrokePath(context)
+            context.setStrokeColor(self.color)
+            context.strokePath()
         }
     }
 }

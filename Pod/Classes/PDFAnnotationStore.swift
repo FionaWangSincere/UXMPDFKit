@@ -12,7 +12,7 @@ public class PDFAnnotationStore {
     
     var pages:[Int:PDFAnnotationPage] = [:]
     
-    func addAnnotation(annotation: PDFAnnotation, page: Int) {
+    func addAnnotation(_ annotation: PDFAnnotation, page: Int) {
         
         if let storePage:PDFAnnotationPage = pages[page] {
             
@@ -27,7 +27,7 @@ public class PDFAnnotationStore {
         }
     }
     
-    func drawAnnotations(page: Int, context:CGContextRef) {
+    func drawAnnotations(_ page: Int, context:CGContext) {
         
         if let storePage = pages[page] {
             for annotation in storePage.annotations {
@@ -42,7 +42,7 @@ public class PDFAnnotationPage {
     var annotations:[PDFAnnotation] = []
     var page:Int = 0
     
-    func addAnnotation(annotation: PDFAnnotation) {
+    func addAnnotation(_ annotation: PDFAnnotation) {
         annotations.append(annotation)
     }
 }

@@ -21,11 +21,11 @@ public class PDFDocument: NSObject, NSCoding {
     
     /// Document Properties
     public var password: String?
-    public var lastOpen: NSDate?
+    public var lastOpen: Date?
     public var pageCount: Int = 0
     public var currentPage: Int = 1
     public var bookmarks: NSMutableIndexSet = NSMutableIndexSet()
-    public var fileUrl: NSURL
+    public var fileUrl: URL
     public var fileSize: Int = 0
     public var guid: String
     
@@ -36,11 +36,11 @@ public class PDFDocument: NSObject, NSCoding {
     public var keywords: String?
     public var creator: String?
     public var producer: String?
-    public var modificationDate: NSDate?
-    public var creationDate: NSDate?
+    public var modificationDate: Date?
+    public var creationDate: Date?
     public var version:Float = 0.0
     
-    static func documentFromFile(filePath: String, password: String?) -> PDFDocument? {
+    static func documentFromFile(_ filePath: String, password: String?) -> PDFDocument? {
         
         var document:PDFDocument? = PDFDocument.unarchiveDocumentForFile(filePath, password: password)
         
@@ -52,18 +52,18 @@ public class PDFDocument: NSObject, NSCoding {
         return document
     }
     
-    static func unarchiveDocumentForFile(filePath: String, password: String?) -> PDFDocument? {
+    static func unarchiveDocumentForFile(_ filePath: String, password: String?) -> PDFDocument? {
         
         return nil
     }
     
     public required init?(coder aDecoder: NSCoder) {
         
-        self.guid = aDecoder.decodeObjectForKey("fileGUID") as! String
-        self.currentPage = aDecoder.decodeObjectForKey("currentPage") as! Int
-        self.bookmarks = aDecoder.decodeObjectForKey("bookmarks") as! NSMutableIndexSet
-        self.lastOpen = aDecoder.decodeObjectForKey("lastOpen") as? NSDate
-        self.fileUrl = NSURL(fileURLWithPath: aDecoder.decodeObjectForKey("fileURL") as! String)
+        self.guid = aDecoder.decodeObject(forKey: "fileGUID") as! String
+        self.currentPage = aDecoder.decodeObject(forKey: "currentPage") as! Int
+        self.bookmarks = aDecoder.decodeObject(forKey: "bookmarks") as! NSMutableIndexSet
+        self.lastOpen = aDecoder.decodeObject(forKey: "lastOpen") as? Date
+        self.fileUrl = URL(fileURLWithPath: aDecoder.decodeObject(forKey: "fileURL") as! String)
         
         super.init()
         
@@ -78,8 +78,8 @@ public class PDFDocument: NSObject, NSCoding {
         
         self.guid = PDFDocument.GUID()
         self.password = password
-        self.fileUrl = NSURL(fileURLWithPath: filePath, isDirectory: false)
-        self.lastOpen = NSDate()
+        self.fileUrl = URL(fileURLWithPath: filePath, isDirectory: false)
+        self.lastOpen = Date()
         
         super.init()
         
@@ -92,64 +92,64 @@ public class PDFDocument: NSObject, NSCoding {
         
         do {
             
-            let pdfDocRef:CGPDFDocumentRef = try CGPDFDocument.create(self.fileUrl, password: self.password)
+            let pdfDocRef:CGPDFDocument = try CGPDFDocument.create(self.fileUrl, password: self.password)
             
-            let infoDic:CGPDFDictionaryRef = CGPDFDocumentGetInfo(pdfDocRef)
-            var string:CGPDFStringRef = nil
+            let infoDic:CGPDFDictionaryRef = pdfDocRef.info!
+            var string:CGPDFStringRef? = nil
             
             if CGPDFDictionaryGetString(infoDic, "Title", &string) {
                 
-                if let ref:CFStringRef = CGPDFStringCopyTextString(string) {
+                if let ref:CFString = CGPDFStringCopyTextString(string!) {
                     self.title = ref as String
                 }
             }
             
             if CGPDFDictionaryGetString(infoDic, "Author", &string) {
                 
-                if let ref:CFStringRef = CGPDFStringCopyTextString(string) {
+                if let ref:CFString = CGPDFStringCopyTextString(string!) {
                     self.author = ref as String
                 }
             }
             
             if CGPDFDictionaryGetString(infoDic, "Subject", &string) {
                 
-                if let ref:CFStringRef = CGPDFStringCopyTextString(string) {
+                if let ref:CFString = CGPDFStringCopyTextString(string!) {
                     self.subject = ref as String
                 }
             }
             
             if CGPDFDictionaryGetString(infoDic, "Keywords", &string) {
                 
-                if let ref:CFStringRef = CGPDFStringCopyTextString(string) {
+                if let ref:CFString = CGPDFStringCopyTextString(string!) {
                     self.keywords = ref as String
                 }
             }
             
             if CGPDFDictionaryGetString(infoDic, "Creator", &string) {
                 
-                if let ref:CFStringRef = CGPDFStringCopyTextString(string) {
+                if let ref:CFString = CGPDFStringCopyTextString(string!) {
                     self.creator = ref as String
                 }
             }
             
             if CGPDFDictionaryGetString(infoDic, "Producer", &string) {
                 
-                if let ref:CFStringRef = CGPDFStringCopyTextString(string) {
+                if let ref:CFString = CGPDFStringCopyTextString(string!) {
                     self.producer = ref as String
                 }
             }
             
             if CGPDFDictionaryGetString(infoDic, "CreationDate", &string) {
                 
-                if let ref:CFDateRef = CGPDFStringCopyDate(string) {
-                    self.creationDate = ref as NSDate
+                if let ref:CFDate = CGPDFStringCopyDate(string!) {
+                    self.creationDate = ref as Date
                 }
             }
             
             if CGPDFDictionaryGetString(infoDic, "ModDate", &string) {
                 
-                if let ref:CFDateRef = CGPDFStringCopyDate(string) {
-                    self.modificationDate = ref as NSDate
+                if let ref:CFDate = CGPDFStringCopyDate(string!) {
+                    self.modificationDate = ref as Date
                 }
             }
             
@@ -158,7 +158,7 @@ public class PDFDocument: NSObject, NSCoding {
             //            CGPDFDocumentGetVersion(pdfDocRef, majorVersion, minorVersion)
             //            self.version = Float("\(majorVersion).\(minorVersion)")!
             
-            self.pageCount = CGPDFDocumentGetNumberOfPages(pdfDocRef)
+            self.pageCount = pdfDocRef.numberOfPages
             
         } catch let err {
             
@@ -173,34 +173,34 @@ public class PDFDocument: NSObject, NSCoding {
     
     static func GUID() -> String {
         
-        return NSProcessInfo.processInfo().globallyUniqueString
+        return ProcessInfo.processInfo().globallyUniqueString
     }
     
     public static func documentsPath() -> String {
-        return NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+        return NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
     }
     
     public static func applicationPath() -> String {
         
-        let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)
-        return (paths.first! as NSString).stringByDeletingLastPathComponent
+        let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
+        return (paths.first! as NSString).deletingLastPathComponent
     }
     
     public static func applicationSupportPath() -> String {
         
-        let fileManager = NSFileManager()
-        let pathURL = try! fileManager.URLForDirectory(.ApplicationSupportDirectory, inDomain: .UserDomainMask, appropriateForURL: nil, create: true)
+        let fileManager = FileManager()
+        let pathURL = try! fileManager.urlForDirectory(.applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         return pathURL.path!
     }
     
-    static func archiveFilePathForFileAtPath(path: String) -> String {
+    static func archiveFilePathForFileAtPath(_ path: String) -> String {
         
         let archivePath = PDFDocument.applicationSupportPath()
         let archiveName = "random-name-fix-later.plist"
-        return (archivePath as NSString).stringByAppendingPathComponent(archiveName)
+        return (archivePath as NSString).appendingPathComponent(archiveName)
     }
     
-    static func isPDF(filePath: String) -> Bool {
+    static func isPDF(_ filePath: String) -> Bool {
         
         let state = false
         //        let path = (filePath as NSString).fileSystemRepresentation
@@ -218,7 +218,7 @@ public class PDFDocument: NSObject, NSCoding {
         return state;
     }
     
-    func archiveWithFileAtPath(filePath: String) -> Bool {
+    func archiveWithFileAtPath(_ filePath: String) -> Bool {
         
         let archiveFilePath = PDFDocument.archiveFilePathForFileAtPath(filePath)
         return NSKeyedArchiver.archiveRootObject(self, toFile: archiveFilePath)
@@ -233,37 +233,37 @@ public class PDFDocument: NSObject, NSCoding {
         self.loadDocumentInformation()
     }
     
-    public func boundsForPDFPage(page:Int) -> CGRect {
-        let pageRef = CGPDFDocumentGetPage(documentRef, page)
+    public func boundsForPDFPage(_ page:Int) -> CGRect {
+        let pageRef = documentRef?.page(at: page)
         
-        let cropBoxRect:CGRect = CGPDFPageGetBoxRect(pageRef, .CropBox)
-        let mediaBoxRect:CGRect = CGPDFPageGetBoxRect(pageRef, .MediaBox)
-        let effectiveRect:CGRect = CGRectIntersection(cropBoxRect, mediaBoxRect)
+        let cropBoxRect:CGRect = pageRef!.getBoxRect(.cropBox)
+        let mediaBoxRect:CGRect = pageRef!.getBoxRect(.mediaBox)
+        let effectiveRect:CGRect = cropBoxRect.intersection(mediaBoxRect)
         
-        let pageAngle = CGPDFPageGetRotationAngle(pageRef)
+        let pageAngle = pageRef?.rotationAngle ?? 0
         
         switch (pageAngle) {
         case 0, 180: // 0 and 180 degrees
             
-            return CGRectMake(
-                effectiveRect.origin.x,
-                effectiveRect.origin.y,
-                effectiveRect.size.width,
-                effectiveRect.size.height
+            return CGRect(
+                x: effectiveRect.origin.x,
+                y: effectiveRect.origin.y,
+                width: effectiveRect.size.width,
+                height: effectiveRect.size.height
             )
         case 90, 270: // 90 and 270 degrees
-            return CGRectMake(
-                effectiveRect.origin.y,
-                effectiveRect.origin.x,
-                effectiveRect.size.height,
-                effectiveRect.size.width
+            return CGRect(
+                x: effectiveRect.origin.y,
+                y: effectiveRect.origin.x,
+                width: effectiveRect.size.height,
+                height: effectiveRect.size.width
             )
         default:
-            return CGRectMake(
-                effectiveRect.origin.x,
-                effectiveRect.origin.y,
-                effectiveRect.size.width,
-                effectiveRect.size.height
+            return CGRect(
+                x: effectiveRect.origin.x,
+                y: effectiveRect.origin.y,
+                width: effectiveRect.size.width,
+                height: effectiveRect.size.height
             )
         }
     }
@@ -283,12 +283,12 @@ public class PDFDocument: NSObject, NSCoding {
     /// Helper methods
     /////
     
-    public func encodeWithCoder(aCoder: NSCoder) {
+    public func encode(with aCoder: NSCoder) {
         
-        aCoder.encodeObject(self.guid, forKey: "fileGUID")
-        aCoder.encodeObject(self.currentPage, forKey: "currentPage")
-        aCoder.encodeObject(self.bookmarks, forKey: "bookmarks")
-        aCoder.encodeObject(self.lastOpen, forKey: "lastOpen")
-        aCoder.encodeObject(self.fileUrl.path!, forKey: "fileURL")
+        aCoder.encode(self.guid, forKey: "fileGUID")
+        aCoder.encode(self.currentPage, forKey: "currentPage")
+        aCoder.encode(self.bookmarks, forKey: "bookmarks")
+        aCoder.encode(self.lastOpen, forKey: "lastOpen")
+        aCoder.encode(self.fileUrl.path!, forKey: "fileURL")
     }
 }

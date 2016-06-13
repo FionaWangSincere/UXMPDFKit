@@ -10,9 +10,9 @@ import UIKit
 
 protocol PDFFormViewDelegate {
     
-    func formFieldValueChanged(widget: PDFFormField)
-    func formFieldEntered(widget: PDFFormField)
-    func formFieldOptionsChanged(widget: PDFFormField)
+    func formFieldValueChanged(_ widget: PDFFormField)
+    func formFieldEntered(_ widget: PDFFormField)
+    func formFieldOptionsChanged(_ widget: PDFFormField)
 }
 
 public class PDFFormFieldObject: NSObject {
@@ -68,7 +68,7 @@ public class PDFFormFieldObject: NSObject {
         return nil
     }
     
-    func determineFlags(flags: UInt) -> [PDFFormFlag] {
+    func determineFlags(_ flags: UInt) -> [PDFFormFlag] {
         
         var flagsArr:[PDFFormFlag] = []
         if ((flags & PDFFormFlag.ReadOnly.rawValue) > 0) {
@@ -95,7 +95,7 @@ public class PDFFormFieldObject: NSObject {
         return flagsArr
     }
     
-    func determineExportValue(dict: PDFDictionary) -> String {
+    func determineExportValue(_ dict: PDFDictionary) -> String {
         if let apObj = dict["AP"] as? PDFDictionary {
             if let nObj = apObj["N"] as? PDFDictionary {
                 for key in nObj.allKeys() {
@@ -112,9 +112,9 @@ public class PDFFormFieldObject: NSObject {
         return ""
     }
     
-    func createTextField(options: PDFFormViewOptions) -> PDFFormField {
+    func createTextField(_ options: PDFFormViewOptions) -> PDFFormField {
         
-        let field = PDFFormTextField(frame: options.rect, multiline: false, alignment: NSTextAlignment.Left)
+        let field = PDFFormTextField(frame: options.rect, multiline: false, alignment: NSTextAlignment.left)
         field.delegate = self
         if let value = self.value {
             field.value = value
@@ -122,7 +122,7 @@ public class PDFFormFieldObject: NSObject {
         return field
     }
     
-    func createButtonField(options: PDFFormViewOptions) -> PDFFormField {
+    func createButtonField(_ options: PDFFormViewOptions) -> PDFFormField {
         
         let radio:Bool = options.flags?.contains({ $0 == PDFFormFlag.ButtonRadio }) ?? false
         let field = PDFFormButtonField(frame: options.rect, radio: radio)
@@ -136,7 +136,7 @@ public class PDFFormFieldObject: NSObject {
         return field
     }
     
-    func createSignatureField(options: PDFFormViewOptions) -> PDFFormField {
+    func createSignatureField(_ options: PDFFormViewOptions) -> PDFFormField {
         
         let field = PDFFormSignatureField(frame: options.rect)
         field.delegate = self
@@ -149,13 +149,13 @@ public class PDFFormFieldObject: NSObject {
 
 extension PDFFormFieldObject: PDFFormViewDelegate {
     
-    func formFieldValueChanged(widget: PDFFormField) {
+    func formFieldValueChanged(_ widget: PDFFormField) {
         self.value = widget.value
     }
     
-    func formFieldEntered(widget: PDFFormField) { }
+    func formFieldEntered(_ widget: PDFFormField) { }
     
-    func formFieldOptionsChanged(widget: PDFFormField) { }
+    func formFieldOptionsChanged(_ widget: PDFFormField) { }
 }
 
 public class PDFFormField: UIView {
@@ -190,23 +190,23 @@ public class PDFFormField: UIView {
         self.setNeedsDisplay()
     }
     
-    func didSetValue(value: AnyObject?) { }
+    func didSetValue(_ value: AnyObject?) { }
     
-    func updateForZoomScale(scale: CGFloat) {
+    func updateForZoomScale(_ scale: CGFloat) {
         self.zoomScale = scale
-        let screenAndZoomScale = scale * UIScreen.mainScreen().scale
+        let screenAndZoomScale = scale * UIScreen.main().scale
         self.applyScale(screenAndZoomScale, toView: self)
         self.applyScale(screenAndZoomScale, toLayer: self.layer)
     }
     
-    func applyScale(scale: CGFloat, toView view:UIView) {
+    func applyScale(_ scale: CGFloat, toView view:UIView) {
         view.contentScaleFactor = scale
         for subview in view.subviews {
             self.applyScale(scale, toView: subview)
         }
     }
     
-    func applyScale(scale: CGFloat, toLayer layer:CALayer) {
+    func applyScale(_ scale: CGFloat, toLayer layer:CALayer) {
         layer.contentsScale = scale
         
         guard let sublayers = layer.sublayers else {
@@ -217,7 +217,7 @@ public class PDFFormField: UIView {
         }
     }
     
-    func renderInContext(context: CGContext) {
+    func renderInContext(_ context: CGContext) {
         
     }
 }

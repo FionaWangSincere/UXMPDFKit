@@ -16,7 +16,7 @@ public class PDFFormButtonField: PDFFormField {
     public var name:String = ""
     public var exportValue:String = ""
     
-    private var button:UIButton = UIButton(type: .Custom)
+    private var button:UIButton = UIButton(type: .custom)
     private let inset:CGFloat = 0.8
     
     init(frame: CGRect, radio: Bool) {
@@ -31,37 +31,37 @@ public class PDFFormButtonField: PDFFormField {
     
     func setupUI() {
         
-        self.opaque = false
-        self.backgroundColor = UIColor.clearColor()
+        self.isOpaque = false
+        self.backgroundColor = UIColor.clear()
         
         if self.radio {
             self.button.layer.cornerRadius = self.button.frame.width/2
         }
-        self.button.frame = CGRectMake(
-            (frame.width - frame.width * inset) / 2,
-            (frame.height - frame.height * inset) / 2,
-            frame.width * inset,
-            frame.height * inset)
-        self.button.opaque = false
-        self.button.backgroundColor = UIColor.clearColor()
-        self.button.addTarget(self, action: #selector(PDFFormButtonField.buttonPressed), forControlEvents: .TouchUpInside)
-        self.button.userInteractionEnabled = true
-        self.button.exclusiveTouch = true
+        self.button.frame = CGRect(
+            x: (frame.width - frame.width * inset) / 2,
+            y: (frame.height - frame.height * inset) / 2,
+            width: frame.width * inset,
+            height: frame.height * inset)
+        self.button.isOpaque = false
+        self.button.backgroundColor = UIColor.clear()
+        self.button.addTarget(self, action: #selector(PDFFormButtonField.buttonPressed), for: .touchUpInside)
+        self.button.isUserInteractionEnabled = true
+        self.button.isExclusiveTouch = true
         self.addSubview(self.button)
     }
     
-    override func didSetValue(value: AnyObject?) {
+    override func didSetValue(_ value: AnyObject?) {
         if let value = value as? String {
             self.setButtonState(value == self.exportValue)
         }
     }
     
-    func setButtonState(selected: Bool) {
+    func setButtonState(_ selected: Bool) {
         if selected {
-            self.button.backgroundColor = UIColor.blackColor()
+            self.button.backgroundColor = UIColor.black()
         }
         else {
-            self.button.backgroundColor = UIColor.clearColor()
+            self.button.backgroundColor = UIColor.clear()
         }
     }
     
@@ -78,19 +78,19 @@ public class PDFFormButtonField: PDFFormField {
         self.delegate?.formFieldValueChanged(self)
     }
     
-    override func renderInContext(context: CGContext) {
+    override func renderInContext(_ context: CGContext) {
         
         var frame = self.button.frame
         frame.origin.x += self.frame.origin.x
         frame.origin.y += self.frame.origin.y
         
         if isSelected() {
-            CGContextSetFillColorWithColor(context, UIColor.blackColor().CGColor)
+            context.setFillColor(UIColor.black().cgColor)
         }
         else {
-            CGContextSetFillColorWithColor(context, UIColor.clearColor().CGColor)
+            context.setFillColor(UIColor.clear().cgColor)
         }
-        CGContextAddRect(context, frame)
-        CGContextDrawPath(context, .FillStroke)
+        context.addRect(frame)
+        context.drawPath(using: .fillStroke)
     }
 }
